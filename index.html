@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy New Year Surprise!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            overflow-x: hidden; /* Prevent horizontal scroll from fireworks */
+            position: relative; /* For fireworks canvas positioning */
+        }
+
+        .container {
+            padding: 20px;
+            position: relative; /* Ensure content is above fireworks */
+            z-index: 2; /* Content above fireworks */
+        }
+
+        h1 {
+            color: #ffcc00;
+            font-size: 2.8em; /* Slightly larger for impact */
+            text-shadow: 2px 2px 12px rgba(255, 204, 0, 0.7);
+            margin-bottom: 10px;
+        }
+
+        /* Countdown Timer Styling */
+        #timer {
+            font-size: 2.2em; /* Slightly larger */
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.15); /* Slightly less transparent */
+            display: inline-block;
+            padding: 18px 35px; /* Larger padding */
+            border-radius: 60px; /* More rounded */
+            margin: 25px 0;
+            border: 3px solid #ffcc00; /* Thicker border */
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.6); /* Added glow effect */
+        }
+
+        /* Slideshow Container */
+        .slideshow {
+            max-width: 550px; /* Slightly wider */
+            height: 420px; /* Slightly taller */
+            margin: 30px auto;
+            position: relative;
+            border: 10px solid #ffffff; /* Thicker white border */
+            border-radius: 20px; /* More rounded corners */
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); /* Stronger shadow */
+            background-color: rgba(0,0,0,0.3); /* Slight background for empty space */
+        }
+
+        .slideshow img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 1.2s ease-in-out; /* Slower transition */
+        }
+
+        .slideshow img.active {
+            opacity: 1;
+        }
+
+        .message {
+            margin-top: 30px;
+            font-size: 1.3em; /* Slightly larger message */
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        /* Music Controls */
+        .music-controls {
+            margin-top: 25px;
+        }
+
+        .music-controls button {
+            background-color: #ffcc00;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: bold;
+        }
+
+        .music-controls button:hover {
+            background-color: #e6b800;
+            transform: scale(1.05);
+        }
+
+        /* Fireworks Canvas */
+        #fireworks-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Below content */
+            pointer-events: none; /* Allows clicks to pass through */
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="newYearMusic" loop autoplay>
+        <source src="new-year-music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div class="container">
+        <h1>Advance Happy New Year 2024! ✨</h1>
+        
+        <div id="timer">Loading Timer...</div>
+
+        <div class="slideshow">
+            <img src="photo1.jpg" class="active">
+            <img src="photo2.jpg">
+            <img src="photo3.jpg">
+            <img src="photo4.jpg">
+            <img src="photo5.jpg">
+        </div>
+
+        <div class="message">
+            <p>Duniya ki sabse best behan ke liye ek chota sa surprise!</p>
+            <p>Wishing you a year full of smiles and happiness. ❤️</p>
+        </div>
+
+        <div class="music-controls">
+            <button onclick="playMusic()">Music: ON 🔊</button>
+            <button onclick="pauseMusic()">Music: OFF 🔇</button>
+        </div>
+    </div>
+
+    <canvas id="fireworks-canvas"></canvas>
+
+    <script>
+        // --- Music Controls ---
+        const newYearMusic = document.getElementById('newYearMusic');
+        newYearMusic.volume = 0.5; // Set initial volume
+
+        function playMusic() {
+            newYearMusic.play().catch(e => console.log("Music play failed:", e));
+        }
+
+        function pauseMusic() {
+            newYearMusic.pause();
+        }
+
+        // Auto-play might be blocked by some browsers, so adding a user interaction to start is good practice.
+        document.addEventListener('DOMContentLoaded', () => {
+            // Try to play on load, but if blocked, user can click button
+            playMusic(); 
+        });
+
+
+        // --- Countdown Timer Logic ---
+        // Set the target date for New Year (adjust year if needed)
+        const targetDate = new Date("Jan 1, 2024 00:00:00").getTime(); 
+
+        const countdownInterval = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            if (distance < 0) {
+                document.getElementById("timer").innerHTML = "HAPPY NEW YEAR! 🎉";
+                clearInterval(countdownInterval); // Stop the countdown
+                startFireworks(); // Start fireworks when countdown ends
+            } else {
+                document.getElementById("timer").innerHTML = days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+            }
+        }, 1000);
+
+        // --- Slideshow Logic ---
+        let currentIndex = 0;
+        const photos = document.querySelectorAll('.slideshow img');
+
+        function showNextPhoto() {
+            photos[currentIndex].classList.remove('active');
+            currentIndex = (currentIndex + 1) % photos.length;
+            photos[currentIndex].classList.add('active');
+        }
+
+        setInterval(showNextPhoto, 3500); // Har 3.5 second me photo badlegi
+
+        // --- Fireworks Logic (Simple Implementation) ---
+        const canvas = document.getElementById('fireworks-canvas');
+        const ctx = canvas.getContext('2d');
+        let fireworks = [];
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function Firework(x, y, targetX, targetY, hue) {
+            this.x = x;
+            this.y = y;
+            this.baseY = y;
+            this.targetX = targetX;
+            this.targetY = targetY;
+            this.hue = hue;
+            this.speed = 2 + Math.random() * 3;
+            this.angle = Math.atan2(targetY - y, targetX - x);
+            this.brightness = 50 + Math.random() * 30;
+            this.decay = 0.015;
+            this.exploded = false;
+        }
+
+        Firework.prototype.update = function() {
+            if (this.exploded) return;
+
+            let prevX = this.x;
+            let prevY = this.y;
+
+            this.x += Math.cos(this.angle) * this.speed;
+            this.y += Math.sin(this.angle) * this.speed;
+            this.speed *= 0.99; // Drag
+
+            // Explode when near target or reaches peak
+            if (this.y < this.targetY || this.speed < 0.5) {
+                this.exploded = true;
+                createParticles(this.x, this.y, this.hue);
+            }
+        };
+
+        Firework.prototype.draw = function() {
+            if (this.exploded) return;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'hsl(' + this.hue + ', 100%, ' + this.brightness + '%)';
+            ctx.fill();
+        };
+
+        function Particle(x, y, hue) {
+            this.x = x;
+            this.y = y;
+            this.hue = hue;
+            this.brightness = 50 + Math.random() * 30;
+            this.decay = 0.01 + Math.random() * 0.015;
+            this.speed = Math.random() * 5 + 0.5;
+            this.angle = Math.random() * Math.PI * 2;
+            this.friction = 0.95;
+            this.gravity = 0.5;
+            this.alpha = 1;
+        }
+
+        Particle.prototype.update = function() {
+            this.speed *= this.friction;
+            this.x += Math.cos(this.angle) * this.speed;
+            this.y += Math.sin(this.angle) * this.speed + this.gravity;
+            this.alpha -= this.decay;
+        };
+
+        Particle.prototype.draw = function() {
+            if (this.alpha <= 0) return;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'hsla(' + this.hue + ', 100%, ' + this.brightness + '%, ' + this.alpha + ')';
+            ctx.fill();
+        };
+
+        function createParticles(x, y, hue) {
+            let particleCount = 50 + Math.random() * 100;
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle(x, y, hue));
+            }
+        }
+
+        function loop() {
+            // Darken canvas slowly to create trail effect
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'lighter';
+
+            fireworks = fireworks.filter(f => !f.exploded || f.brightness > 0); // Keep only active fireworks
+            particles = particles.filter(p => p.alpha > 0); // Keep only active particles
+
+            fireworks.forEach(f => {
+                f.update();
+                f.draw();
+            });
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(loop);
+        }
+
+        // Function to start firing fireworks
+        function startFireworks() {
+            setInterval(() => {
+                let startX = canvas.width / 2;
+                let startY = canvas.height;
+                let targetX = Math.random() * canvas.width;
+                let targetY = Math.random() * canvas.height / 2; // Upper half
+                let hue = Math.random() * 360; // Random color
+                fireworks.push(new Firework(startX, startY, targetX, targetY, hue));
+            }, 500); // Launch a new firework every 0.5 seconds
+        }
+
+        // Start the animation loop
+        requestAnimationFrame(loop);
+
+    </script>
+
+</body>
+</html>
